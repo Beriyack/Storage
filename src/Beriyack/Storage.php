@@ -1,4 +1,9 @@
 <?php
+
+namespace Beriyack;
+
+use FilesystemIterator;
+
 /**
  * Class Storage
  *
@@ -6,7 +11,7 @@
  * interacting with the filesystem. This includes operations for
  * managing directories, files, and their contents.
  *
- * @package Beriyack\Utils
+ * @package Beriyack\Storage
  * @author Beriyack
  * @version 1.0.0
  */
