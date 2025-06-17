@@ -1,0 +1,30 @@
+{
+    "name": "beriyack/storage",
+    "description": "Une bibliothèque PHP simple et robuste offrant un ensemble de méthodes statiques pour interagir facilement avec le système de fichiers.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Beriyack\\": "src/Beriyack/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Beriyack"
+        }
+    ],
+    "keywords": [
+        "php",
+        "filesystem",
+        "file",
+        "directory",
+        "storage",
+        "utility",
+        "helper"
+    ],
+    "require": {
+        "php": ">=8.1"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
