@@ -20,14 +20,22 @@ Une bibliothèque PHP simple et robuste offrant un ensemble de méthodes statiqu
 
 ## 🚀 Installation
 
-Cette bibliothèque est conçue pour être utilisée en incluant simplement le fichier `Storage.php` dans votre projet.
+Cette bibliothèque est conçue pour être facilement installable via Composer.
 
-1.  **Téléchargez** le fichier `Storage.php` directement depuis ce dépôt GitHub.
+1.  **Exigence :** Assurez-vous d'avoir [Composer](https://getcomposer.org/) installé sur votre système.
+2.  **Ajoutez la dépendance :** Exécutez la commande suivante dans le répertoire de votre projet :
 
-2.  **Incluez-le** dans votre projet PHP :
+    ```bash
+    composer require beriyack/storage
+    ```
+
+    Cela installera la librairie dans votre dossier `vendor/` et mettra à jour l'autoloader de Composer.
+
+3.  **Mettez à jour votre autoloader :**
+    Incluez l'autoloader de Composer au début de votre script PHP :
 
     ```php
-    require_once 'Beriyack/Storage/Storage.php';
+    require_once 'vendor/autoload.php';
     ```
 
 -----
