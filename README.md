@@ -167,8 +167,3 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](https://www.google.co
 Pour toute question ou suggestion, vous pouvez me contacter via [Beriyack](https://github.com/Beriyack).
 
 -----
-
-### Points à personnaliser :
-
-  * **Ajoutez un fichier `LICENSE` :** Créez un fichier nommé `LICENSE` à la racine de votre dépôt GitHub et collez-y le texte de la licence MIT (vous pouvez le trouver facilement en ligne). C'est essentiel pour tout projet open-source.
-  * **Exemples supplémentaires :** Si vous avez des cas d'utilisation très spécifiques ou des astuces, ajoutez-les dans la section "Utilisation".
