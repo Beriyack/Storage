@@ -1,7 +1,5 @@
 # 📂 PHP File Storage Utility
 
-[](https://opensource.org/licenses/MIT)
-
 Une bibliothèque PHP simple et robuste offrant un ensemble de méthodes statiques pour interagir facilement avec le système de fichiers. Que vous ayez besoin de gérer des fichiers, des répertoires, de lire ou d'écrire du contenu, cette classe `Storage` simplifie ces opérations courantes.
 
 -----
@@ -18,12 +16,12 @@ Une bibliothèque PHP simple et robuste offrant un ensemble de méthodes statiqu
 
 -----
 
-## 🚀 Installation
+## 🛠️ Installation
 
 Cette bibliothèque est conçue pour être facilement installable via Composer.
 
 1.  **Exigence :** Assurez-vous d'avoir [Composer](https://getcomposer.org/) installé sur votre système.
-2.  **Ajoutez la dépendance :** Exécutez la commande suivante dans le répertoire de votre projet :
+2.  **Ajoutez la dépendance** à votre projet via Composer :
 
     ```bash
     composer require beriyack/storage
@@ -31,11 +29,14 @@ Cette bibliothèque est conçue pour être facilement installable via Composer.
 
     Cela installera la librairie dans votre dossier `vendor/` et mettra à jour l'autoloader de Composer.
 
-3.  **Mettez à jour votre autoloader :**
-    Incluez l'autoloader de Composer au début de votre script PHP :
+3.  **Utilisez l'autoloader de Composer** dans votre projet :
 
     ```php
+    <?php
     require_once 'vendor/autoload.php';
+
+    use Beriyack\Storage;
+    ?>
     ```
 
 -----
@@ -47,7 +48,9 @@ Toutes les méthodes de la classe `Storage` sont statiques, ce qui les rend faci
 ```php
 <?php
 
-require_once 'Beriyack/Storage/Storage.php'; // Assurez-vous que le chemin est correct
+require_once 'vendor/autoload.php';
+
+use Beriyack\Storage;
 
 // --- Exemples de gestion de fichiers ---
 
