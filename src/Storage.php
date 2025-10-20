@@ -15,7 +15,7 @@ use RecursiveIteratorIterator;
  *
  * @package Beriyack\Storage
  * @author Beriyack
- * @version 1.0.0
+ * @version 2.1.0
  */
 class Storage
 {
