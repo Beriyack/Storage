@@ -3,6 +3,8 @@
 namespace Beriyack;
 
 use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 /**
  * Class Storage
@@ -33,30 +35,17 @@ class Storage
             return [];
         }
 
-        $allDirs = []; // Initialise le tableau qui contiendra tous les répertoires
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
 
-        // Ouvre le répertoire
-        if ($handle = opendir($directory)) {
-            // Lit chaque entrée du répertoire
-            while (false !== ($entry = readdir($handle))) {
-                // Ignore les entrées '.' et '..'
-                if ($entry != "." && $entry != "..") {
-                    $path = $directory . DIRECTORY_SEPARATOR . $entry;
-
-                    // Si l'entrée est un répertoire
-                    if (self::isDirectory($path)) {
-                        $allDirs[] = $path; // Ajoute le répertoire actuel au tableau
-
-                        // Appelle récursivement la fonction pour les sous-répertoires
-                        $subDirs = self::allDirectories($path);
-                        // Fusionne les sous-répertoires trouvés avec le tableau principal
-                        $allDirs = array_merge($allDirs, $subDirs);
-                    }
-                }
+        $allDirs = [];
+        foreach ($iterator as $item) {
+            if ($item->isDir()) {
+                $allDirs[] = $item->getRealPath();
             }
-            closedir($handle); // Ferme le répertoire
         }
-
         return $allDirs; // Retourne le tableau de tous les répertoires
     }
 
@@ -74,31 +63,17 @@ class Storage
             return [];
         }
 
-        $allFiles = []; // Initialise le tableau qui contiendra tous les fichiers
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
 
-        // Ouvre le répertoire
-        if ($handle = opendir($directory)) {
-            // Lit chaque entrée du répertoire
-            while (false !== ($entry = readdir($handle))) {
-                // Ignore les entrées '.' et '..'
-                if ($entry != "." && $entry != "..") {
-                    $path = $directory . DIRECTORY_SEPARATOR . $entry;
-
-                    // Si l'entrée est un fichier
-                    if (self::isFile($path)) {
-                        $allFiles[] = $path; // Ajoute le fichier actuel au tableau
-                    }
-                    // Si l'entrée est un répertoire, on appelle récursivement pour trouver les fichiers à l'intérieur
-                    elseif (self::isDirectory($path)) {
-                        $subFiles = self::allFiles($path);
-                        // Fusionne les fichiers trouvés dans les sous-répertoires avec le tableau principal
-                        $allFiles = array_merge($allFiles, $subFiles);
-                    }
-                }
+        $allFiles = [];
+        foreach ($iterator as $item) {
+            if ($item->isFile()) {
+                $allFiles[] = $item->getRealPath();
             }
-            closedir($handle); // Ferme le répertoire
         }
-
         return $allFiles; // Retourne le tableau de tous les fichiers
     }
 
@@ -140,45 +115,29 @@ class Storage
             return false;
         }
 
-        // Si le répertoire est vide, il n'y a rien à faire.
-        if (!(new FilesystemIterator($directory))->valid()) {
-            return true;
-        }
+        $success = true; // Variable pour suivre le succès global
 
-        // Ouvre le répertoire
-        $handle = opendir($directory);
-        if ($handle === false) {
-            trigger_error("Impossible d'ouvrir le répertoire pour le nettoyage : " . $directory, E_USER_WARNING);
+        try {
+            $iterator = new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS);
+            foreach ($iterator as $item) {
+                if ($item->isDir()) {
+                    // Si c'est un répertoire, on le supprime récursivement.
+                    if (!self::deleteDirectory($item->getRealPath())) {
+                        $success = false; // Marque un échec mais continue
+                    }
+                } else {
+                    // Si c'est un fichier, on le supprime.
+                    if (!unlink($item->getRealPath())) {
+                        $success = false; // Marque un échec mais continue
+                        trigger_error("Impossible de supprimer le fichier lors du nettoyage : " . $item->getRealPath(), E_USER_WARNING);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            trigger_error("Erreur lors de l'itération du répertoire pour le nettoyage : " . $e->getMessage(), E_USER_WARNING);
             return false;
         }
 
-        $success = true; // Variable pour suivre le succès global
-
-        while (false !== ($entry = readdir($handle))) {
-            // Ignore les entrées '.' et '..'
-            if ($entry === '.' || $entry === '..') {
-                continue;
-            }
-
-            $path = $directory . DIRECTORY_SEPARATOR . $entry;
-
-            // Si c'est un répertoire, on le supprime récursivement avec la nouvelle fonction deleteDirectory
-            if (self::isDirectory($path)) {
-                if (!self::deleteDirectory($path)) {
-                    $success = false; // Marque un échec mais continue de tenter de supprimer le reste
-                    trigger_error("Échec de la suppression du sous-répertoire lors du nettoyage : " . $path, E_USER_WARNING);
-                }
-            }
-            // Si c'est un fichier, on le supprime
-            elseif (self::isFile($path)) {
-                if (!unlink($path)) {
-                    $success = false; // Marque un échec mais continue de tenter de supprimer le reste
-                    trigger_error("Impossible de supprimer le fichier lors du nettoyage : " . $path, E_USER_WARNING);
-                }
-            }
-        }
-
-        closedir($handle);
         return $success;
     }
 
@@ -232,32 +191,28 @@ class Storage
             return false;
         }
 
-        $items = scandir($directory);
-        if ($items === false) {
-            trigger_error("Impossible de scanner le répertoire pour la suppression récursive : " . $directory, E_USER_WARNING);
+        try {
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::CHILD_FIRST
+            );
+
+            foreach ($iterator as $item) {
+                if ($item->isDir()) {
+                    if (!rmdir($item->getRealPath())) {
+                        trigger_error("Impossible de supprimer le sous-répertoire : " . $item->getRealPath(), E_USER_WARNING);
+                        return false;
+                    }
+                } else {
+                    if (!unlink($item->getRealPath())) {
+                        trigger_error("Impossible de supprimer le fichier : " . $item->getRealPath(), E_USER_WARNING);
+                        return false;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            trigger_error("Erreur lors de la suppression récursive du répertoire : " . $e->getMessage(), E_USER_WARNING);
             return false;
-        }
-
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
-
-            $path = $directory . DIRECTORY_SEPARATOR . $item;
-
-            if (self::isDirectory($path)) {
-                // Appel récursif pour les sous-répertoires
-                if (!self::deleteDirectory($path)) {
-                    return false; // Échec de la suppression d'un sous-répertoire
-                }
-            } 
-            elseif (self::isFile($path)) {
-                // Suppression du fichier
-                if (!unlink($path)) {
-                    trigger_error("Impossible de supprimer le fichier lors de la suppression récursive du répertoire : " . $path, E_USER_WARNING);
-                    return false; // Échec de la suppression d'un fichier
-                }
-            }
         }
 
         // Enfin, supprime le répertoire vide lui-même
@@ -283,26 +238,15 @@ class Storage
         }
 
         $foundDirectories = [];
-
-        // scandir() est efficace pour lister le contenu direct d'un répertoire.
-        $items = scandir($directory);
-
-        if ($items === false) {
-            trigger_error("Impossible de lire le contenu du répertoire : " . $directory, E_USER_WARNING);
-            return [];
-        }
-
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
+        try {
+            $iterator = new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS);
+            foreach ($iterator as $item) {
+                if ($item->isDir()) {
+                    $foundDirectories[] = $item->getRealPath();
+                }
             }
-
-            $path = $directory . DIRECTORY_SEPARATOR . $item;
-
-            // Vérifie si l'élément est un répertoire.
-            if (self::isDirectory($path)) {
-                $foundDirectories[] = $path;
-            }
+        } catch (\Exception $e) {
+            trigger_error("Erreur lors de la lecture du répertoire : " . $e->getMessage(), E_USER_WARNING);
         }
 
         return $foundDirectories;
@@ -351,29 +295,16 @@ class Storage
         }
 
         $foundFiles = [];
-
-        // scandir() est efficace pour lister le contenu direct d'un répertoire.
-        $items = scandir($directory);
-
-        if ($items === false) {
-            trigger_error("Impossible de lire le contenu du répertoire : " . $directory, E_USER_WARNING);
-            return [];
-        }
-
-        foreach ($items as $item) {
-            // Ignore les entrées '.' et '..'
-            if ($item === '.' || $item === '..') {
-                continue;
+        try {
+            $iterator = new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS);
+            foreach ($iterator as $item) {
+                if ($item->isFile()) {
+                    $foundFiles[] = $item->getRealPath();
+                }
             }
-
-            $path = $directory . DIRECTORY_SEPARATOR . $item;
-
-            // Vérifie si l'élément est un fichier en utilisant self::isFile().
-            if (self::isFile($path)) { // self::isFile est préférable car elle assure que c'est bien un fichier.
-                $foundFiles[] = $path;
-            }
+        } catch (\Exception $e) {
+            trigger_error("Erreur lors de la lecture du répertoire : " . $e->getMessage(), E_USER_WARNING);
         }
-
         return $foundFiles;
     }
 
