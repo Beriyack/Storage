@@ -225,6 +225,28 @@ class Storage
     }
 
     /**
+     * May be used to remove one or more files from the disk
+     *
+     * @param string|array $paths Le chemin du fichier ou un tableau de chemins de fichiers à supprimer.
+     * @return bool True si tous les fichiers ont été supprimés avec succès, false sinon.
+     */
+    public static function delete(string|array $paths): bool
+    {
+        $paths = is_array($paths) ? $paths : [$paths];
+        $success = true;
+
+        foreach ($paths as $path) {
+            if (self::isFile($path)) {
+                if (!unlink($path)) {
+                    $success = false;
+                    trigger_error("Impossible de supprimer le fichier : " . $path, E_USER_WARNING);
+                }
+            }
+        }
+        return $success;
+    }
+
+    /**
      * Returns an array of all the directories directly within a given directory (non-recursive).
      *
      * @param string $directory Le chemin du répertoire à scanner.
